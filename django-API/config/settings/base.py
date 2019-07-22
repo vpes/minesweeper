@@ -41,6 +41,8 @@ USE_TZ = True
 DATABASES = {
     'default': env.db('DATABASE_URL', default='postgres://'),
 }
+DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
+DATABASES['default']['ATOMIC_REQUESTS'] = True
 
 # AUTH_USER_MODEL = 'minesweeper.User'
 # URLS

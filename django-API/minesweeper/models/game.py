@@ -21,7 +21,7 @@ class MS_Game(models.Model):
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     status = FSMField(default="new", choices=GAME_STATUS, db_index=True)
     size = models.PositiveSmallIntegerField()
-    mines = ArrayField()
+    mines = ArrayField(base_field=models.PositiveSmallIntegerField())
     board = JSONField()
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now_add=True)
