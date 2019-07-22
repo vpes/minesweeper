@@ -22,3 +22,6 @@ if __name__ == "__main__":
             )
 
         raise
+
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    sys.path.append(current_path)

@@ -23,7 +23,7 @@ DEBUG = env.bool('DJANGO_DEBUG', False)
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # though not all of them may be available with every OS.
 # In Windows, this must be set to your system time zone.
-TIME_ZONE = 'America/BuenosAires'
+# TIME_ZONE = 'America/Buenos Aires'
 # https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = 'en-us'
 # https://docs.djangoproject.com/en/dev/ref/settings/#site-id
@@ -42,8 +42,7 @@ DATABASES = {
     'default': env.db('DATABASE_URL', default='postgres://'),
 }
 
-AUTH_USER_MODEL = 'User'
-
+# AUTH_USER_MODEL = 'minesweeper.User'
 # URLS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#root-urlconf
@@ -63,12 +62,13 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     'rest_framework',
-    'django_filters',
+    # 'django_filters',
 ]
 
 LOCAL_APPS = [
     'minesweeper',
 ]
+
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

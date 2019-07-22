@@ -1,15 +1,16 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User as BaseUser
 from django.db import models
 
 
-class UserModel(User):
+class User(BaseUser):
     """
         User model for persisting and resume methods
     """
-    is_active = models.BooleanField()
+    pass
 
     class Meta:
         managed = True
+        db_table = "user"
 
     @property
     def is_staff(self):

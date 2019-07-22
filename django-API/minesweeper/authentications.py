@@ -1,11 +1,13 @@
+"""
+    DRF custom authentication class
+"""
 # coding: utf8
-from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import authentication
 from rest_framework import exceptions
 
-from models.token import Token
+from .models.token import Token
 
 
 class CustomTokenAuthentication(authentication.TokenAuthentication):
