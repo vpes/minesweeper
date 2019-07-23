@@ -24,7 +24,7 @@ class MS_Game(models.Model):
     rows = models.PositiveSmallIntegerField()
     columns = models.PositiveSmallIntegerField()
     mines_count = models.PositiveSmallIntegerField()
-    mines = ArrayField(base_field=models.PositiveSmallIntegerField())
+    mines = ArrayField(base_field=models.PositiveSmallIntegerField(), null=True)
     board = JSONField()
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now_add=True)
@@ -59,6 +59,31 @@ class MS_Game(models.Model):
         if mines_count < 1 or mines_count > rows * columns - 1:
             raise Exception(_("Bad mines count argument"))
         self.mines_count = mines_count
+        self._create_board()
+
+    def _create_board(self):
+        """
+        Crewates the board matrix using the given rows and columns
+        :param rows: Integer > 0
+        :param columns: Integer > 0
+        :return:
+        """
+        board = []
+        for i in range(self.rows):
+            row = []
+            for j in range(self.columns):
+                row.append(
+                    {
+                        "c": j + 1,  # c column number base 1
+                        "r": i + 1,  # r row number base 1
+                        "v": False,  # v visible
+                        "f": False,  # f flag
+                        "n": 0,  # n neighbors value
+                        "b": False,  # has a bomb , The bombs are created on start
+                    }
+                )
+            board.append(row)
+        self.board = board
 
     def _add_mines(self, mines_count: int, size: int, excluded: int):
         """
@@ -68,58 +93,63 @@ class MS_Game(models.Model):
         :return:
         """
         self.mines = random.sample(range(size), mines_count)
-        index = self.mines.index(excluded)
-        if index >= 0:
-            new_value = random.randint(size)
-            while new_value in self.mines:
-                new_value = random.randint(size)
-            self.mines[index] = new_value
+        try:
+            index = self.mines.index(excluded)
+            if index >= 0:
+                new_value = random.randint(0, size - 1)
+                while new_value in self.mines:
+                    new_value = random.randint(0, size - 1)
+                self.mines[index] = new_value
+        except ValueError:
+            # index method throws ValueError exception if the value is not in the list
+            pass
+        for mine in self.mines:
+            row = mine // self.columns
+            column = mine % self.columns
+            self._add_bomb(row, column)
 
+    def _add_bomb(self, row, column):
+        cell = self.board[row][column]
+        cell["b"] = True
+        self._calculate_neighbors(row, column)
 
-    def _create_board(self, rows: int, columns: int):
-        """
-        Crewates the board matrix using the given rows and columns
-        :param rows: Integer > 0
-        :param columns: Integer > 0
-        :return:
-        """
-        board = []
-        sorted_mines = sorted(self.mines)
-        for i in range(rows):
-            row = []
-            for j in range(columns):
-                has_bomb = sorted_mines.index(i * columns + j)
-                row.append({"c": j+1, # c column number base 1
-                            "r": i+1, # r row number base 1
-                            "v": False, # v visible
-                            "f": False, # f flag
-                            "n": 0 if has_bomb else self.calculate_neighbors(i,j), # n neighbors value
-                            "b":  has_bomb# has a bomb
-                            })
-            board.append(row)
-        self.board = {"board": board}
+    def _calculate_neighbors(self, row, column):
+        if row > 0:
+            if column > 0:
+                self.board[row - 1][column - 1]["n"] += 1
+            self.board[row - 1][column]["n"] += 1
+            if column < self.columns - 1:
+                self.board[row - 1][column - 1]["n"] += 1
+        if column > 0:
+            self.board[row][column - 1]["n"] += 1
+        if column < self.columns - 1:
+            self.board[row][column - 1]["n"] += 1
+        if row < self.rows - 1:
+            if column > 0:
+                self.board[row + 1][column - 1]["n"] += 1
+            self.board[row + 1][column]["n"] += 1
+            if column < self.columns - 1:
+                self.board[row + 1][column - 1]["n"] += 1
 
     def toggle_red_flag(self, row: int, column: int):
         self.board[row][column]["f"] = not self.board[row][column]["f"]
 
-    def cell_visible(self, row: int, column: int):
-        cell = self.board[row][column]
-        if self.status == 'new':
+    def select_cell(self, row: int, column: int):
+        if self.status == "new":
             self.start(row, column)
-        if cell["b"]: # Has bomb
+        cell = self.board[row][column]
+        if cell["b"]:  # Has bomb
             self.loose()
         elif not cell["v"]:
             cell["v"] = True
         self.save()
 
-    def calculate_neighbors(self, row, column):
-        pass
-
     # Finite State Machine methods
     @transition(field=status, source="new", target="started")
     def start(self, row, column, **kwargs):
-        self._add_mines(self.mines_count, self.rows * self.columns, row * self.rows + column)
-        self._create_board(self.rows, self.columns)
+        self._add_mines(
+            self.mines_count, self.rows * self.columns, row * self.rows + column
+        )
         self.started = datetime.datetime.now()
 
     @transition(field=status, source="started", target="lose")

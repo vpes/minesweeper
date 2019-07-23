@@ -23,6 +23,7 @@ docutils==0.14
 factory-boy==2.12.0
 Faker==2.0.0
 future==0.16.0
+gunicorn==19.9.0
 idna==2.7
 importlib-metadata==0.18
 jmespath==0.9.4

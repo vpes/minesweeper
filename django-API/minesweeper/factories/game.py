@@ -9,6 +9,6 @@ class GameFactory(factory.django.DjangoModelFactory):
         model = MS_Game
 
     user = factory.SubFactory(UserFactory)
-    rows = FuzzyInteger(4, 64)
-    columns = FuzzyInteger(4, 64)
-    mines_count = 4
+    rows = 20 # FuzzyInteger(4, 64)
+    columns = 20# FuzzyInteger(4, 64)
+    mines_count = 40
