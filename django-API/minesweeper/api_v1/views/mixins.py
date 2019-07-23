@@ -72,14 +72,14 @@ class AuthTokenMixin(object):
         return (token, None)
 
     def authenticate_credentials(self, key):
-        from urbvan_core.models.token import Token
+        from minesweeper.models.token import Token
         try:
             token = Token.objects.select_related('user').get(key=key, is_active=True)
         except Token.DoesNotExist:
             exception = AuthException(detail=_('Invalid token.'))
             return (None, exception)
 
-        if not token.user.is_active or token.user.is_removed:
+        if not token.user.is_active:
             exception = AuthException(detail='User is not active or is removed.') # NOQA
             return (None, exception)
 
@@ -140,6 +140,7 @@ class UserSessionMixin:
             return user_exception.crash()
         return super(UserSessionMixin, self).dispatch(request, *args, **kwargs)
 
+
 class ValidateParamMixin:
     def get_success_headers(self, data):
         try:
@@ -153,7 +154,7 @@ class ValidateParamMixin:
                 continue
             value = data.get(param)
             if value is None:
-                error = "Missing parameter"
+                error = {"detail": "Missing parameter", "code": 8000}
                 error['detail'] = error['detail'].format(param)
                 raise ValidationError(error['detail'],error['code'])
             setattr(self, param, value)

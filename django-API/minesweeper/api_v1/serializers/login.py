@@ -13,47 +13,31 @@ from rest_framework import serializers
 
 class NativeLoginSerializer(serializers.Serializer):
 
-    email_phone = serializers.CharField()
-    password = serializers.CharField(min_length=7)
+    email = serializers.CharField()
+    password = serializers.CharField(min_length=1)
 
     def validate(self, data):
 
-        email_phone = data.get('email_phone')
-        password = data.get('password')
+        email = data.get("email")
+        password = data.get("password")
 
-        user = get_user_model().objects.filter(
-            Q(email=email_phone) | Q(phone=email_phone, phone_valided=True)
-        )
-
-        if user:
-
-            if len(user) > 1:
-                error_message = "Multiple records returned"
-                error_message.update({"app": "users_native_login"})
-                raise serializers.ValidationError({"login": error_message})
-
-            user = user[0]
-
+        user, created = get_user_model().objects.get_or_create(email=email,
+                                                         defaults={
+                                                             "username": email,
+                                                             "first_name": email,
+                                                             "last_name": email
+                                                         })
+        if created:
+            user.set_password(password)
+            user.save()
         else:
-
-            error_message = "Invalid email"
-            error_message.update({"app": "users_native_login"})
-            raise serializers.ValidationError({"login": error_message})
-
-        user = authenticate(
-            username=user.username,
-            password=password
-        )
+            user = authenticate(username=user.username, password=password)
 
         if user is not None:
             self.user = user
             return data
-
         else:
             error_message = "Invalid authentication"
             error_message.update({"app": "users_native_login"})
             raise serializers.ValidationError({"login": error_message})
-
         return data
-
-

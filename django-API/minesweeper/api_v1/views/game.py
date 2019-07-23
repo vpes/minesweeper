@@ -24,7 +24,7 @@ class GameViewSet(
             "mine_count",
         ]
         self._validate_request_params(request.data, required_params)
-        game = MS_Game(self.client,
+        game = MS_Game(self.user,
                     rows=self.rows,
                     columns=self.columns,
                     mine_count=self.mine_count)
@@ -34,14 +34,14 @@ class GameViewSet(
 
     def retrieve(self, request, pk=None):
         try:
-            game = self.queryset.get(pk=pk, user_id=self.client.id)
+            game = self.queryset.get(pk=pk, user_id=self.user.id)
             serializer = self.serializer_class(game)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except MS_Game.DoesNotExist:
             return Response("The game does not exist", status=404)
 
     def list(self, request, *args, **kwargs):
-        games = self.queryset.get(user_id=self.client.id).order_by("-created")
+        games = self.queryset.get(user_id=self.user.id).order_by("-created")
         serializer = GameListSerializer(games, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -52,7 +52,7 @@ class GameViewSet(
             "col",
         ]
         self._validate_request_params(request.data, required_params)
-        game = self.queryset.get(pk=pk, user_id=self.client.id)
+        game = self.queryset.get(pk=pk, user_id=self.user.id)
         game.select_cell(self.row, self.col)
         response = {}
         return Response(response, status=status.HTTP_200_OK)

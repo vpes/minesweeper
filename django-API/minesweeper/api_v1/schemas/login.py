@@ -5,28 +5,11 @@ from django.conf import settings
 
 from marshmallow import (Schema, fields, pre_dump)
 from minesweeper.models.token import Token
-
-
 from minesweeper.api_v1.views.utils import reset_token
-
-
-
-class PhoneUserSchema(Schema):
-
-    number = fields.String(default="")
-    country_code = fields.String(default="52")
-    is_validated = fields.Boolean(default=False)
-
-
-class PostalCodeUserSchema(Schema):
-
-    home = fields.String()
-    office = fields.String()
 
 
 class UserSchema(Schema):
 
-    uuid = fields.UUID(dump_to="id")
     username = fields.String()
     email = fields.String()
     token = fields.String()

@@ -9,10 +9,17 @@
 
 </head>
 <body>
-<button value="20x20" onclick="create_board('#game',20,20)">20x20</button>
+<div id="login_container" >
+    <form action="#" id="login_form">
+        <div><input type="text" name="username" id="username" placeholder="Username"/></div>
+        <div><input type="password" name="password" id="password"  placeholder="Password"/></div>
+        <div><input type="button" name="login" onclick="do_login(this)" value="Login"/></div>
+    </form>
+</div>
+<div id="game_container" style="display: none">
+<button value="20x20" onclick="create_board('#game',20,20)">20 x 20</button>
 <p id="message">Click the button to start</p>
-<div id="game"></div>
-
-
+<div id="game" ></div>
+</div>
 </body>
 </html>
