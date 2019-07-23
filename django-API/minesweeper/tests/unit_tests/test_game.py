@@ -35,3 +35,8 @@ def test_start_game():
             if game.board[i][j]["b"]:
                 mines += 1
     assert mines == 40
+    row = game.mines[0] // game.columns
+    column = game.mines[0] % game.columns
+    assert game.board[row][column]["b"] == True
+    game.select_cell(row, column)
+    assert game.status == "lose"
