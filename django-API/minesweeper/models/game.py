@@ -25,6 +25,8 @@ class MS_Game(models.Model):
     columns = models.PositiveSmallIntegerField()
     mines_count = models.PositiveSmallIntegerField()
     mines = ArrayField(base_field=models.PositiveSmallIntegerField(), null=True)
+    flags = ArrayField(base_field=models.PositiveSmallIntegerField(), null=True)
+    discovered_cells = models.PositiveSmallIntegerField(default=0)
     board = JSONField()
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now_add=True)
@@ -42,25 +44,13 @@ class MS_Game(models.Model):
         """Game name."""
         return "{}: {} ({:%Y-%m-%d %H:%M})".format(self.user, self.status, self.created)
 
-    def __init__(
-        self, user, rows: int, columns: int, mines_count: int, *args, **kwargs
-    ):
-        """
-            A constructur with the basic attributes
-        :param user: User of the game
-        :param rows: width of the board
-        :param columns: height of the board
-        :param mine_count: Number of mines
-        """
-        super().__init__(*args, **kwargs)
-        self.user = user
-        self.rows = rows
-        self.columns = columns
-        if mines_count < 1 or mines_count > rows * columns - 1:
-            raise Exception(_("Bad mines count argument"))
-        self.mines_count = mines_count
-        self._create_board()
-
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            if self.mines_count < 1 or self.mines_count > self.rows * self.columns - 1:
+                raise Exception(_("Bad mines count argument"))
+            self._create_board()
+        super(MS_Game, self).save(*args, **kwargs)
+        
     def _create_board(self):
         """
         Crewates the board matrix using the given rows and columns
@@ -77,7 +67,7 @@ class MS_Game(models.Model):
                         "c": j + 1,  # c column number base 1
                         "r": i + 1,  # r row number base 1
                         "v": False,  # v visible
-                        "f": False,  # f flag
+                        "f": 0,  # f flag
                         "n": 0,  # n neighbors value
                         "b": False,  # has a bomb , The bombs are created on start
                     }
@@ -119,30 +109,77 @@ class MS_Game(models.Model):
                 self.board[row - 1][column - 1]["n"] += 1
             self.board[row - 1][column]["n"] += 1
             if column < self.columns - 1:
-                self.board[row - 1][column - 1]["n"] += 1
+                self.board[row - 1][column + 1]["n"] += 1
         if column > 0:
             self.board[row][column - 1]["n"] += 1
         if column < self.columns - 1:
-            self.board[row][column - 1]["n"] += 1
+            self.board[row][column + 1]["n"] += 1
         if row < self.rows - 1:
             if column > 0:
                 self.board[row + 1][column - 1]["n"] += 1
             self.board[row + 1][column]["n"] += 1
             if column < self.columns - 1:
-                self.board[row + 1][column - 1]["n"] += 1
+                self.board[row + 1][column + 1]["n"] += 1
 
-    def toggle_red_flag(self, row: int, column: int):
-        self.board[row][column]["f"] = not self.board[row][column]["f"]
+    def toggle_flag(self, row: int, column: int):
+        """
+            Toggle the flags value between 3 states
+            0: Not flag
+            1: Flag
+            2: Conditional flag
+        :param row:
+        :param column:
+        :return:
+        """
+        if self.flags is None:
+            self.flags = []
+        cell = self.board[row][column]
+        flag_pos = row * self.columns + column
+        if cell["f"] == 1:
+            self.flags.pop(self.flags.index(flag_pos))
+        elif cell["f"] == 0:
+            self.flags.append(flag_pos)
+        cell["f"] = (cell["f"] + 1) % 3
+        self.save()
+        return cell["f"], len(self.flags)
 
     def select_cell(self, row: int, column: int):
+        result = None
         if self.status == "new":
             self.start(row, column)
         cell = self.board[row][column]
         if cell["b"]:  # Has bomb
             self.loose()
         elif not cell["v"]:
-            cell["v"] = True
+            result = self._connected_empty_cells(row, column)
+            self.discovered_cells += len(result)
         self.save()
+        return result
+
+    def _connected_empty_cells(self, row: int, column: int):
+        cell = self.board[row][column]
+        result = []
+        if not (cell["v"] or cell["b"]):
+            cell["v"] = True
+            result.append((row, column, cell["n"]))
+            if cell["n"] == 0:
+                if row > 0:
+                    if column > 0:
+                        result += self._connected_empty_cells(row - 1, column - 1)
+                    result += self._connected_empty_cells(row - 1, column)
+                    if column < self.columns - 1:
+                        result += self._connected_empty_cells(row - 1, column + 1)
+                if column > 0:
+                    result += self._connected_empty_cells(row, column - 1)
+                if column < self.columns - 1:
+                    result += self._connected_empty_cells(row, column + 1)
+                if row < self.rows - 1:
+                    if column > 0:
+                        result+= self._connected_empty_cells(row + 1, column - 1)
+                    result+= self._connected_empty_cells(row + 1, column)
+                    if column < self.columns - 1:
+                        result+= self._connected_empty_cells(row + 1, column + 1)
+        return result
 
     # Finite State Machine methods
     @transition(field=status, source="new", target="started")

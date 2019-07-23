@@ -6,3 +6,6 @@ table.game{padding: 0px; border: 0px}
 #login_form div{padding: 10px}
 input {padding: 5px}
 input.required {border: solid red 1px }
+.flag {background-color: cornflowerblue; text-align: center}
+.default {background-color: white}
+.selected{background-color: lightgrey}
