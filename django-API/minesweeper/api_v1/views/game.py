@@ -22,12 +22,12 @@ class GameViewSet(
         if game is None:
             game = MS_Game.objects.create(
                 user=self.user,
-                rows=self.rows,
-                columns=self.columns,
-                mines_count=self.mines_count,
+                rows=int(self.rows),
+                columns=int(self.columns),
+                mines_count=int(self.mines_count),
             )
         serializer = self.serializer_class(game)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None):
         try:

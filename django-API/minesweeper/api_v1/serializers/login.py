@@ -37,7 +37,8 @@ class NativeLoginSerializer(serializers.Serializer):
             self.user = user
             return data
         else:
-            error_message = "Invalid authentication"
-            error_message.update({"app": "users_native_login"})
+            error_message = {"app": "users_native_login",
+                             "details": "Invalid authentication",
+                             "code": 401}
             raise serializers.ValidationError({"login": error_message})
         return data

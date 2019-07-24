@@ -46,11 +46,18 @@ class MS_Game(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            if self.mines_count < 1 or self.mines_count > self.rows * self.columns - 1:
+            if (
+                self.rows < 3
+                or self.columns < 3
+                or self.rows > 1000
+                or self.columns > 1000
+            ):
+                raise Exception(_("Bad board size (min 3, max 1000)"))
+            if self.mines_count < 1 or self.mines_count > (self.rows * self.columns) / 2:
                 raise Exception(_("Bad mines count argument"))
             self._create_board()
         super(MS_Game, self).save(*args, **kwargs)
-        
+
     def _create_board(self):
         """
         Crewates the board matrix using the given rows and columns
@@ -83,16 +90,36 @@ class MS_Game(models.Model):
         :return:
         """
         self.mines = random.sample(range(size), mines_count)
-        try:
-            index = self.mines.index(excluded)
-            if index >= 0:
-                new_value = random.randint(0, size - 1)
-                while new_value in self.mines:
+        excluded_list = [excluded]
+        not_is_left = excluded % self.columns > 0
+        not_is_rigth = excluded % self.columns < self.columns - 1
+        if excluded // self.rows > 0:
+            if not_is_left:
+                excluded_list.append(excluded - self.columns - 1)
+            excluded_list.append(excluded - self.columns)
+            if not_is_rigth:
+                excluded_list.append(excluded - self.columns + 1)
+        if not_is_left:
+            excluded_list.append(excluded - -1)
+        if not_is_rigth:
+            excluded_list.append(excluded + 1)
+        if excluded // self.rows < self.rows - 1:
+            if not_is_left:
+                excluded_list.append(excluded + self.columns - 1)
+            excluded_list.append(excluded - self.columns)
+            if not_is_rigth:
+                excluded_list.append(excluded + self.columns + 1)
+        for el in excluded_list:
+            try:
+                index = self.mines.index(el)
+                if index >= 0:
                     new_value = random.randint(0, size - 1)
-                self.mines[index] = new_value
-        except ValueError:
-            # index method throws ValueError exception if the value is not in the list
-            pass
+                    while new_value in self.mines:
+                        new_value = random.randint(0, size - 1)
+                    self.mines[index] = new_value
+            except ValueError:
+                # index method throws ValueError exception if the value is not in the list
+                pass
         for mine in self.mines:
             row = mine // self.columns
             column = mine % self.columns
@@ -149,6 +176,7 @@ class MS_Game(models.Model):
             self.start(row, column)
         cell = self.board[row][column]
         if cell["b"]:  # Has bomb
+            result = [(row, column, -1)]
             self.loose()
         elif not cell["v"]:
             result = self._connected_empty_cells(row, column)
@@ -175,10 +203,10 @@ class MS_Game(models.Model):
                     result += self._connected_empty_cells(row, column + 1)
                 if row < self.rows - 1:
                     if column > 0:
-                        result+= self._connected_empty_cells(row + 1, column - 1)
-                    result+= self._connected_empty_cells(row + 1, column)
+                        result += self._connected_empty_cells(row + 1, column - 1)
+                    result += self._connected_empty_cells(row + 1, column)
                     if column < self.columns - 1:
-                        result+= self._connected_empty_cells(row + 1, column + 1)
+                        result += self._connected_empty_cells(row + 1, column + 1)
         return result
 
     # Finite State Machine methods

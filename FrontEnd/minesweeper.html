@@ -11,15 +11,35 @@
 <body>
 <div id="login_container" >
     <form action="#" id="login_form">
-        <div><input type="text" name="username" id="username" placeholder="Username"/></div>
+    <p>Please enter an email and a password (and remember it for resume the game). </p>
+    <p>If the email is not registered, a new user will be created.</p>
+    <br/>
+        <div><input type="text" name="username" id="username" placeholder="Email"/></div>
         <div><input type="password" name="password" id="password"  placeholder="Password"/></div>
         <div><input type="button" name="login" onclick="do_login(this)" value="Login"/></div>
     </form>
 </div>
 <div id="game_container" style="display: none">
-<button value="20x20" class="start_button" onclick="create_board('#game',20,20)">20 x 20</button>
-<p id="message">Click the button to start</p>
-<div id="game" ></div>
+    <div style="width: 100%; text-align: center">
+        <p id="message">Click one button to start</p>
+    </div>
+    <div style="width: 100%" id="menu">
+        <div class="start_screen"></div>
+        <div class="start_screen container">
+            <p>Fixed size (20 x 20)</p>
+            <button value="20x20" class="start_button" onclick="create_board('#game',20,20)">20 x 20</button>
+        </div>
+        <div class="start_screen"></div>
+        <div class="start_screen container">
+            <p>Custom size</p>
+            <p>Rows: <input type="number" max="1000" min="3" value="16" step="1" pattern="\d" placeholder="Rows" id="input_rows"/></p>
+            <p>Columns: <input type="number" max="1000" min="3" value="16" step="1" pattern="\d" placeholder="Columns" id="input_cols"/></p>
+            <p>Percent mines<input type="number" max="96" min="1" value="50" step="1" pattern="\d" placeholder="Percent Mines" id="input_mines"/></p>
+            <p><button value="custom" class="start_button" onclick="create_custom_board('#game')">Custom board</button></p>
+        </div>
+        <div class="start_screen"></div>
+    </div>
+    <div id="game" ></div>
     <div id="flags" ></div>
 </div>
 </body>

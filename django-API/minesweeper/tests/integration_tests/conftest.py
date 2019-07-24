@@ -8,19 +8,7 @@ from django.core.management import call_command
 
 @pytest.fixture(scope="session")
 def django_db_setup(django_db_setup, django_db_blocker):
-    import os
-
-    homePath = os.path.abspath(
-        os.path.join(os.path.dirname(os.path.abspath(os.path.split(__file__)[0])))
-    )
-    with django_db_blocker.unblock():
-        with connections["local"].cursor() as cursor:
-            cursor.execute('TRUNCATE TABLE subscriptions_subscription RESTART IDENTITY CASCADE')
-        response = call_command(
-            "loaddata", os.path.join(homePath, "fixtures", "initial_data.json")
-        )
-        print(response)
-
+    pass
 
 @pytest.fixture
 def db_access_without_rollback_and_truncate(
