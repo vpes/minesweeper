@@ -1,0 +1,16 @@
+.game {min-height: 10px; border: solid black 1px }
+#game, #flags {padding-left: 33%}
+.cell {padding: 0px;height: 20px;width: 20px;
+    min-height: 10px;min-width: 10px; border: solid black 1px }
+table.game {padding: 0px; border: 0px}
+#login_form {text-align: center}
+#login_form div{padding: 10px}
+input {padding: 5px}
+input.required {border: solid red 1px }
+.flag {background-color: cornflowerblue; text-align: center}
+.default {background-color: white}
+.selected {background-color: lightgrey}
+.bomb {background-color: red}
+.hidden_mine{background-color: yellow}
+div.start_screen {min-width:20%; width:20%; float: left;vertical-align: top; padding: 5px}
+div.container {border: solid black 1px}
