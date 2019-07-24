@@ -1,5 +1,5 @@
-window.API_URL = "https://minesweeper-test-vpes.herokuapp.com/v1/";
-
+//Local url API
+window.API_URL = "http://localhost:8008/v1/";
 window.do_login = function(el){
     var $form = $("#login_form");
     var $user = $("#username").val();
