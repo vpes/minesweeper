@@ -16,7 +16,7 @@ class GameListSerializer(serializers.ModelSerializer):
 
 class GameSerializer(serializers.ModelSerializer):
     #Commented for debugging
-    board = serializers.SerializerMethodField()
+    #board = serializers.SerializerMethodField()
     class Meta:
         model = MS_Game
         fields = ("id", "board", "started", "status")

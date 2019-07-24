@@ -11,5 +11,6 @@ input.required {border: solid red 1px }
 .default {background-color: white}
 .selected {background-color: lightgrey}
 .bomb {background-color: red}
+.hidden_mine{background-color: yellow}
 div.start_screen {min-width:20%; width:20%; float: left;vertical-align: top; padding: 5px}
 div.container {border: solid black 1px}

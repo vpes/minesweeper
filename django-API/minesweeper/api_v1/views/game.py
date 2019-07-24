@@ -59,3 +59,8 @@ class GameViewSet(
         flag, flag_count = game.toggle_flag(self.row, self.col)
         response = {"flag": flag, "flag_count": flag_count}
         return Response(response, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["get"])
+    def get_mines(self, request, pk):
+        game = self.queryset.get(pk=pk, user_id=self.user.id)
+        return Response(game.mines, status=status.HTTP_200_OK)

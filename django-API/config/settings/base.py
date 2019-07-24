@@ -39,7 +39,7 @@ USE_TZ = True
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='postgres://'),
+    'default': env.db('DATABASE_URL', default='postgresql://postgres:admin1234@localhost:5431/minesweeper'),
 }
 DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql_psycopg2'
 DATABASES['default']['ATOMIC_REQUESTS'] = True

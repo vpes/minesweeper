@@ -98,59 +98,47 @@ window.create_game = function (el_name, rows, cols, mines=60){
             success: function(data, textStatus, request){
                 console.log(data);
                 var game_data = data.body.results[0];
+                var rows = game_data.board.length;
+                var columns = game_data.board[0].length;
                 $("#game").data("id", data.body.results[0].id)
                           .data("mines", mines)
+                          .data("rows", rows)
+                          .data("columns", columns)
                           .data("status", "started");
                 $("#message").hide();
                 $("#menu").hide();
                 $("#flags").text( "0 / " + $("#game").data("mines"));
                 $(".start_button").hide();
                 var $table = $('<table>').addClass('game');
-                if (game_data.status === 'new'){
-                    for(i=0; i<rows; i++){
-                        var row = $('<tr>').addClass('row');
-                        for (j=0; j<cols; j++){
-                            var cell = $('<td>');
-                            cell.append($('<div>').addClass('cell')
-                                .data('row',i)
-                                .data('col',j)
-                            .attr("id","r"+i+"c"+j)
-                            );
-                            row.append(cell);
+                for(i=0; i<rows; i++){
+                    var row = $('<tr>').addClass('row');
+                    for (j=0; j<columns; j++){
+                        var cell = $('<td>');
+                        var $cell_div = $('<div>').addClass('cell')
+                            .data('row',i)
+                            .data('col',j)
+                            .attr("id","r"+i+"c"+j);
+                        var $game_cell =  game_data.board[i][j];
+                        if ($game_cell.v){
+                           $cell_div.text($game_cell.n > 0?$game_cell.n:"").addClass('selected');
                         }
-                        $table.append(row);
-                }}
-                else{
-                    for(i=0; i<game_data.board.length; i++){
-                        var row = $('<tr>').addClass('row');
-                        for (j=0; j<game_data.board[i].length; j++){
-                            var cell = $('<td>');
-                            var $cell_div = $('<div>').addClass('cell')
-                                .data('row',i)
-                                .data('col',j)
-                                .attr("id","r"+i+"c"+j);
-                            var $game_cell =  game_data.board[i][j];
-                            if ($game_cell.v){
-                               $cell_div.text($game_cell.n > 0?$game_cell.n:"").addClass('selected');
+                        else if ($game_cell.f){
+                            switch ($game_cell.f) {
+                                case 0:
+                                    $cell_div.text("").addClass("default").removeClass("flag");
+                                    break;
+                                case 1:
+                                    $cell_div.text("F").addClass("flag").removeClass("default");
+                                    break;
+                                case 2:
+                                    $cell_div.text("?").addClass("flag").removeClass("default");;
+                                    break;
                             }
-                            else if ($game_cell.f){
-                                switch ($game_cell.f) {
-                                    case 0:
-                                        $cell_div.text("").addClass("default").removeClass("flag");
-                                        break;
-                                    case 1:
-                                        $cell_div.text("X").addClass("flag").removeClass("default");
-                                        break;
-                                    case 2:
-                                        $cell_div.text("?").addClass("flag").removeClass("default");;
-                                        break;
-                                }
-                            }
-                            cell.append($cell_div);
-                            row.append(cell);
                         }
-                        $table.append(row);
-                }
+                        cell.append($cell_div);
+                        row.append(cell);
+                    }
+                    $table.append(row);
                 }
                 var $el = $(el_name);
                 $el.html($table);
@@ -202,7 +190,7 @@ window.toggle_flag = function (row, col) {
                     $cell.text("").addClass("default").removeClass("flag");
                     break;
                 case 1:
-                    $cell.text("X").addClass("flag").removeClass("default");
+                    $cell.text("F").addClass("flag").removeClass("default");
                     break;
                 case 2:
                     $cell.text("?").addClass("flag").removeClass("default");;
@@ -242,7 +230,17 @@ window.select_cell = function (row, col) {
                     $("#game").data("status", "lose");
                     $("#message").show().text("You loose");
                 }
+                else if (cell_data.cells.length === 1 && cell_data.cells[0][2] === -1000){
+                    var cell_tuple = cell_data.cells[0];
+                    var $cell = $("#r"+cell_tuple[0]+"c"+cell_tuple[1]);
+                    $cell.text("#").addClass("bomb");
+                    $("#game").data("status", "win");
+                    $("#message").show().text("You win!!");
+                }
                 else{
+                    // For debugging purposes
+                    // if (!$("#game").data("mine_list"))
+                    //     draw_mines();
                     for (var i=0; i < cell_data.cells.length;i++){
                         var cell_tuple = cell_data.cells[i];
                         var $cell = $("#r"+cell_tuple[0]+"c"+cell_tuple[1]);
@@ -252,3 +250,28 @@ window.select_cell = function (row, col) {
         })
 })
 };
+window.draw_mines = function(){
+    $.ajax({
+        url: "http://localhost:8008/v1/game/" + $("#game").data("id") + "/get_mines/",
+        headers: {"Accept": "application/json",
+                "Authorization" : "Token " + $("#game").data("auth").token
+        },
+        type: 'GET',
+        crossDomain: true,
+        beforeSend: function (xhr) {
+            xhr.withCredentials = true;
+        },
+        success: (function (data) {
+            var mine_list = data.body.results;
+            var $game = $("#game");
+            $game.data("mine_list", mine_list);
+            var rows = $game.data("rows");
+            var columns = $game.data("columns");
+            for (var i=0; i<mine_list.length; i++){
+                var row = Math.floor(mine_list[i] / rows);
+                var column = mine_list[i] % columns;
+                var $cell = $("#r"+row+"c"+column).text("O").addClass("hidden_mine");
+            }
+        })
+    })
+}

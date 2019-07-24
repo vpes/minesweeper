@@ -47,13 +47,16 @@ class MS_Game(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
             if (
-                self.rows < 3
-                or self.columns < 3
+                self.rows < 9
+                or self.columns < 9
                 or self.rows > 1000
                 or self.columns > 1000
             ):
                 raise Exception(_("Bad board size (min 3, max 1000)"))
-            if self.mines_count < 1 or self.mines_count > (self.rows * self.columns) / 2:
+            board_size = self.rows * self.columns
+            if self.mines_count < max(1, board_size // 100) or self.mines_count > int(
+                board_size * 0.96
+            ):
                 raise Exception(_("Bad mines count argument"))
             self._create_board()
         super(MS_Game, self).save(*args, **kwargs)
@@ -175,12 +178,15 @@ class MS_Game(models.Model):
         if self.status == "new":
             self.start(row, column)
         cell = self.board[row][column]
-        if cell["b"]:  # Has bomb
+        if cell["b"]:  # Has bomb, you loose
             result = [(row, column, -1)]
             self.loose()
         elif not cell["v"]:
             result = self._connected_empty_cells(row, column)
             self.discovered_cells += len(result)
+            if self.discovered_cells == self.rows * self.columns - self.mines_count: # You win!
+                result = [(row, column, -1000)]
+                self.win()
         self.save()
         return result
 
