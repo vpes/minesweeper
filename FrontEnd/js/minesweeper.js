@@ -175,6 +175,7 @@ window.create_game = function (el_name, rows, cols, mines=60){
 };
 
 window.toggle_flag = function (row, col) {
+    var $cell = $("#r"+row+"c"+col);
     if ($cell.data("selected") || $("#game").data("status") != "started")
         return false;
     $.ajax({

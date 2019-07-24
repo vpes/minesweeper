@@ -100,13 +100,13 @@ class MS_Game(models.Model):
             if not_is_rigth:
                 excluded_list.append(excluded - self.columns + 1)
         if not_is_left:
-            excluded_list.append(excluded - -1)
+            excluded_list.append(excluded - 1)
         if not_is_rigth:
             excluded_list.append(excluded + 1)
         if excluded // self.rows < self.rows - 1:
             if not_is_left:
                 excluded_list.append(excluded + self.columns - 1)
-            excluded_list.append(excluded - self.columns)
+            excluded_list.append(excluded + self.columns)
             if not_is_rigth:
                 excluded_list.append(excluded + self.columns + 1)
         for el in excluded_list:
@@ -114,7 +114,7 @@ class MS_Game(models.Model):
                 index = self.mines.index(el)
                 if index >= 0:
                     new_value = random.randint(0, size - 1)
-                    while new_value in self.mines:
+                    while new_value in self.mines or new_value in excluded_list:
                         new_value = random.randint(0, size - 1)
                     self.mines[index] = new_value
             except ValueError:
